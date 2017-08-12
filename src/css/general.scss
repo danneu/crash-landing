@@ -1,0 +1,19 @@
+
+$green: #2ecc71;
+$red: #e74c3c;
+
+.text-green {
+  color: $green;
+}
+.text-red {
+  color: $red;
+}
+
+body {
+  font-size: 14px;
+  padding-top: 25px;
+}
+
+.list-unstyled {
+  list-style-type: none;
+}
