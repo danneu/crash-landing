@@ -532,11 +532,13 @@ __webpack_require__(19)
 // Require index.html so it gets copied to dist
 __webpack_require__(21)
 
-const Elm = __webpack_require__(22)
-const mountNode = document.getElementById('main')
+var Elm = __webpack_require__(22)
+var mountNode = document.getElementById('main')
 
 // .embed() can take an optional second argument. This would be an object describing the data we need to start a program, i.e. a userID or some token
-const app = Elm.Main.embed(mountNode)
+var app = Elm.Main.embed(mountNode, {
+    isDev: location.hash === '#dev'
+})
 
 
 document.addEventListener('mouseup', function () {
@@ -584,7 +586,7 @@ exports = module.exports = __webpack_require__(0)(undefined);
 
 
 // module
-exports.push([module.i, ".text-green {\n  color: #2ecc71; }\n\n.text-red {\n  color: #e74c3c; }\n\nbody {\n  font-size: 14px;\n  padding-top: 25px; }\n\n.list-unstyled {\n  list-style-type: none; }\n", ""]);
+exports.push([module.i, ".text-green {\n  color: #2ecc71; }\n\n.text-red {\n  color: #e74c3c; }\n\nbody {\n  font-size: 14px;\n  padding-top: 25px;\n  padding-bottom: 100px; }\n\n.list-unstyled {\n  list-style-type: none; }\n", ""]);
 
 // exports
 
@@ -11075,9 +11077,65 @@ var _myrho$elm_round$Round$roundCom = _myrho$elm_round$Round$roundFun(
 	});
 var _myrho$elm_round$Round$roundNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$roundCom);
 
+var _user$project$Ability$priceOf = function (ability) {
+	var millis = function () {
+		var _p0 = ability;
+		if (_p0.ctor === 'ShallowBreathing') {
+			return 30 * _elm_lang$core$Time$second;
+		} else {
+			return 45 * _elm_lang$core$Time$second;
+		}
+	}();
+	return _elm_lang$core$Time$inSeconds(millis);
+};
 var _user$project$Ability$Engineering = {ctor: 'Engineering'};
 var _user$project$Ability$ShallowBreathing = {ctor: 'ShallowBreathing'};
 
+var _user$project$Abilities$descriptionOf = function (ability) {
+	var _p0 = ability;
+	if (_p0.ctor === 'ShallowBreathing') {
+		return 'Survivor consumes less oxygen while conscious';
+	} else {
+		return 'Survivor becomes more efficient with the fabricator';
+	}
+};
+var _user$project$Abilities$toList = function (_p1) {
+	var _p2 = _p1;
+	return _Gizra$elm_all_set$EverySet$toList(_p2._0);
+};
+var _user$project$Abilities$member = F2(
+	function (k, _p3) {
+		var _p4 = _p3;
+		return A2(_Gizra$elm_all_set$EverySet$member, k, _p4._0);
+	});
+var _user$project$Abilities$isEmpty = function (_p5) {
+	var _p6 = _p5;
+	return _Gizra$elm_all_set$EverySet$isEmpty(_p6._0);
+};
+var _user$project$Abilities$Abilities = function (a) {
+	return {ctor: 'Abilities', _0: a};
+};
+var _user$project$Abilities$empty = _user$project$Abilities$Abilities(_Gizra$elm_all_set$EverySet$empty);
+var _user$project$Abilities$insert = F2(
+	function (k, _p7) {
+		var _p8 = _p7;
+		return _user$project$Abilities$Abilities(
+			A2(_Gizra$elm_all_set$EverySet$insert, k, _p8._0));
+	});
+
+var _user$project$Item$matterCostOf = F2(
+	function (item, quantity) {
+		var _p0 = item;
+		switch (_p0.ctor) {
+			case 'SolarPanel':
+				return 20 + (_elm_lang$core$Basics$toFloat(quantity) * 20);
+			case 'MatterBin':
+				return 20 + (_elm_lang$core$Basics$toFloat(quantity) * 20);
+			default:
+				return 12;
+		}
+	});
+var _user$project$Item$Amphetamine = {ctor: 'Amphetamine'};
 var _user$project$Item$MatterBin = {ctor: 'MatterBin'};
 var _user$project$Item$SolarPanel = {ctor: 'SolarPanel'};
 
@@ -11086,6 +11144,10 @@ var _user$project$Quantity$Quantity = F2(
 		return {curr: a, max: b};
 	});
 
+var _user$project$Action$SpaceSuit = F3(
+	function (a, b, c) {
+		return {power: a, oxygen: b, food: c};
+	});
 var _user$project$Action$Researching = F2(
 	function (a, b) {
 		return {ctor: 'Researching', _0: a, _1: b};
@@ -11232,6 +11294,292 @@ var _user$project$Spectre$ProgressBar = F2(
 		return {value: a, max: b};
 	});
 
+var _user$project$StatusEffects$tick = F2(
+	function (dt, effects) {
+		var updater = F2(
+			function (k, _p0) {
+				var _p1 = _p0;
+				return {ctor: '_Tuple2', _0: _p1._0 + dt, _1: _p1._1};
+			});
+		return A2(
+			_eeue56$elm_all_dict$EveryDict$filter,
+			F2(
+				function (_p3, _p2) {
+					var _p4 = _p2;
+					return _elm_lang$core$Native_Utils.cmp(_p4._0, _p4._1) < 0;
+				}),
+			A2(
+				_eeue56$elm_all_dict$EveryDict$map,
+				F2(
+					function (_p6, _p5) {
+						var _p7 = _p5;
+						return {ctor: '_Tuple2', _0: _p7._0 + dt, _1: _p7._1};
+					}),
+				effects));
+	});
+var _user$project$StatusEffects$descriptionOf = function (effect) {
+	var _p8 = effect;
+	return 'Survivor consumes less food when conscious and works harder';
+};
+var _user$project$StatusEffects$viewEffect = F2(
+	function (effect, _p9) {
+		var _p10 = _p9;
+		return A2(
+			_elm_lang$html$Html$li,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$strong,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_elm_lang$core$Basics$toString(effect),
+								': ')),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							A2(_myrho$elm_round$Round$round, 0, _p10._1 - _p10._0),
+							' seconds')),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$StatusEffects$descriptionOf(effect)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
+var _user$project$StatusEffects$viewSidebar = function (effects) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$div,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('panel'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('panel-header'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('panel-title'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('Temporary Effects'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('panel-body'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$ul,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('list-unstyled'),
+										_1: {ctor: '[]'}
+									},
+									A2(
+										_elm_lang$core$List$map,
+										function (_p11) {
+											var _p12 = _p11;
+											return A2(_user$project$StatusEffects$viewEffect, _p12._0, _p12._1);
+										},
+										_eeue56$elm_all_dict$EveryDict$toList(effects))),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				}),
+			_1: {ctor: '[]'}
+		});
+};
+var _user$project$StatusEffects$durationOf = function (effect) {
+	return _elm_lang$core$Time$inSeconds(
+		function () {
+			var _p13 = effect;
+			return _elm_lang$core$Time$minute * 3;
+		}());
+};
+var _user$project$StatusEffects$member = function (key) {
+	return _eeue56$elm_all_dict$EveryDict$member(key);
+};
+var _user$project$StatusEffects$insert = function (effect) {
+	return A2(
+		_eeue56$elm_all_dict$EveryDict$insert,
+		effect,
+		{
+			ctor: '_Tuple2',
+			_0: 0,
+			_1: _user$project$StatusEffects$durationOf(effect)
+		});
+};
+var _user$project$StatusEffects$isEmpty = _eeue56$elm_all_dict$EveryDict$isEmpty;
+var _user$project$StatusEffects$empty = _eeue56$elm_all_dict$EveryDict$empty;
+var _user$project$StatusEffects$Amphetamine = {ctor: 'Amphetamine'};
+
+var _user$project$Survivor$isResearching = function (survivor) {
+	var _p0 = survivor.action;
+	if (_p0.ctor === 'Researching') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _user$project$Survivor$isFabricating = function (survivor) {
+	var _p1 = survivor.action;
+	if (_p1.ctor === 'Fabricating') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _user$project$Survivor$isIdling = function (survivor) {
+	var _p2 = survivor.action;
+	if (_p2.ctor === 'Idling') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _user$project$Survivor$isSuspended = function (_) {
+	return _.suspended;
+};
+var _user$project$Survivor$init = {suspended: true, dead: false, action: _user$project$Action$Idling};
+var _user$project$Survivor$Survivor = F3(
+	function (a, b, c) {
+		return {suspended: a, dead: b, action: c};
+	});
+
+var _user$project$Main$viewHelp = A2(
+	_elm_lang$html$Html$div,
+	{ctor: '[]'},
+	{
+		ctor: '::',
+		_0: A2(
+			_elm_lang$html$Html$p,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text('\n                An escape pod has crash-landed on a planet with a single survivor.\n            '),
+				_1: {ctor: '[]'}
+			}),
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$p,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('\n                The survivor can be suspended in the pod\'s stasis goo to consume very few resources.\n                Or you can wake them up to build / research improvements that will help them get\n                off the planet.\n            '),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$ul,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$li,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('\n                The pod\'s weak energy grid can only power either the matter collector or the life support system\n             '),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$li,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('\n                Until you fabricate some energy subsystems, you\'ll have to click and hold on the Power\n                Uplink button to charge the pod remotely.\n             '),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$li,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('\n                The survivor can only work on their task when conscious.\n             '),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$li,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('\n                The survivor dies once any of the life support vitals reaches zero.\n             '),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$li,
+											{ctor: '[]'},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('\n                Fabrication costs power and matter. Research only costs time.\n             '),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}),
+				_1: {ctor: '[]'}
+			}
+		}
+	});
 var _user$project$Main$viewDeathMessage = A2(
 	_elm_lang$html$Html$div,
 	{
@@ -11339,7 +11687,7 @@ var _user$project$Main$viewAbilities = function (_p0) {
 													_1: {ctor: '[]'}
 												});
 										},
-										_Gizra$elm_all_set$EverySet$toList(_p1.abilities))),
+										_user$project$Abilities$toList(_p1.abilities))),
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -11420,7 +11768,22 @@ var _user$project$Main$viewInventory = function (_p2) {
 														_elm_lang$core$Basics$toString(_p4.solarPanels))),
 												_1: {ctor: '[]'}
 											}),
-										_1: {ctor: '[]'}
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$core$Native_Utils.eq(_p4.matterBins, 0) ? _elm_lang$html$Html$text('') : A2(
+												_elm_lang$html$Html$li,
+												{ctor: '[]'},
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html$text(
+														A2(
+															_elm_lang$core$Basics_ops['++'],
+															'Matter Bins: ',
+															_elm_lang$core$Basics$toString(_p4.matterBins))),
+													_1: {ctor: '[]'}
+												}),
+											_1: {ctor: '[]'}
+										}
 									}),
 								_1: {ctor: '[]'}
 							}),
@@ -11433,7 +11796,7 @@ var _user$project$Main$viewInventory = function (_p2) {
 var _user$project$Main$powerGrowthPerSecond = function (model) {
 	var charged = function () {
 		var chargedFromSolarPanels = _elm_lang$core$Basics$toFloat(model.inventory.solarPanels) * 0.75;
-		var chargedFromUplink = model.charging ? 4 : 0;
+		var chargedFromUplink = model.charging ? 3 : 0;
 		return chargedFromUplink + chargedFromSolarPanels;
 	}();
 	return charged;
@@ -11530,7 +11893,7 @@ var _user$project$Main$getFabricatorEfficiency = function (model) {
 			_0: 0.5,
 			_1: {
 				ctor: '::',
-				_0: A2(_Gizra$elm_all_set$EverySet$member, _user$project$Ability$Engineering, model.abilities) ? 0.25 : 0,
+				_0: A2(_user$project$Abilities$member, _user$project$Ability$Engineering, model.abilities) ? 0.25 : 0,
 				_1: {ctor: '[]'}
 			}
 		});
@@ -11547,9 +11910,9 @@ var _user$project$Main$tickFabrication = F2(
 		} else {
 			var _p8 = survivor.action;
 			if (_p8.ctor === 'Fabricating') {
-				var _p14 = _p8._1.max;
-				var _p13 = _p8._0;
-				var _p12 = _p8._1.curr;
+				var _p15 = _p8._1.max;
+				var _p14 = _p8._0;
+				var _p13 = _p8._1.curr;
 				var _p9 = function () {
 					var consumed = _user$project$Main$getFabricatorConsumption(model);
 					return {
@@ -11575,27 +11938,38 @@ var _user$project$Main$tickFabrication = F2(
 				var matterApplied = matterConsumed * _user$project$Main$getFabricatorEfficiency(model);
 				var nextMatter = A2(_user$project$Quantity$Quantity, matter.curr - matterConsumed, matter.max);
 				var nextPower = A2(_user$project$Quantity$Quantity, power.curr - powerConsumed, power.max);
-				return (_elm_lang$core$Native_Utils.cmp(_p12 + matterApplied, _p14) > -1) ? _elm_lang$core$Native_Utils.update(
+				return (_elm_lang$core$Native_Utils.cmp(_p13 + matterApplied, _p15) > -1) ? _elm_lang$core$Native_Utils.update(
 					model,
 					{
 						survivor: _elm_lang$core$Native_Utils.update(
 							survivor,
 							{action: _user$project$Action$Idling}),
-						inventory: function () {
-							var _p10 = _p13;
-							if (_p10.ctor === 'SolarPanel') {
-								return _elm_lang$core$Native_Utils.update(
-									inventory,
-									{solarPanels: inventory.solarPanels + 1});
+						statusEffects: function () {
+							var _p10 = _p14;
+							if (_p10.ctor === 'Amphetamine') {
+								return A2(_user$project$StatusEffects$insert, _user$project$StatusEffects$Amphetamine, model.statusEffects);
 							} else {
-								return _elm_lang$core$Native_Utils.update(
-									inventory,
-									{matterBins: inventory.matterBins + 1});
+								return model.statusEffects;
+							}
+						}(),
+						inventory: function () {
+							var _p11 = _p14;
+							switch (_p11.ctor) {
+								case 'SolarPanel':
+									return _elm_lang$core$Native_Utils.update(
+										inventory,
+										{solarPanels: inventory.solarPanels + 1});
+								case 'MatterBin':
+									return _elm_lang$core$Native_Utils.update(
+										inventory,
+										{matterBins: inventory.matterBins + 1});
+								default:
+									return inventory;
 							}
 						}(),
 						matter: function () {
-							var _p11 = _p13;
-							if (_p11.ctor === 'MatterBin') {
+							var _p12 = _p14;
+							if (_p12.ctor === 'MatterBin') {
 								return _elm_lang$core$Native_Utils.update(
 									nextMatter,
 									{max: nextMatter.max + 100});
@@ -11611,8 +11985,8 @@ var _user$project$Main$tickFabrication = F2(
 							{
 								action: A2(
 									_user$project$Action$Fabricating,
-									_p13,
-									A2(_user$project$Quantity$Quantity, _p12 + matterApplied, _p14))
+									_p14,
+									A2(_user$project$Quantity$Quantity, _p13 + matterApplied, _p15))
 							}),
 						matter: nextMatter,
 						power: nextPower
@@ -11624,25 +11998,28 @@ var _user$project$Main$tickFabrication = F2(
 	});
 var _user$project$Main$tickAction = F2(
 	function (dt, model) {
-		var _p15 = model;
-		var survivor = _p15.survivor;
+		var _p16 = model;
+		var survivor = _p16.survivor;
 		if (survivor.suspended) {
 			return model;
 		} else {
-			var _p16 = survivor.action;
-			switch (_p16.ctor) {
+			var _p17 = survivor.action;
+			switch (_p17.ctor) {
 				case 'Idling':
 					return model;
 				case 'Fabricating':
 					return A2(_user$project$Main$tickFabrication, dt, model);
 				default:
-					var _p19 = _p16._1._1;
-					var _p18 = _p16._1._0;
-					var _p17 = _p16._0;
-					return (_elm_lang$core$Native_Utils.cmp(_p18 + dt, _p19) > -1) ? _elm_lang$core$Native_Utils.update(
+					var _p20 = _p17._1._1;
+					var _p19 = _p17._1._0;
+					var _p18 = _p17._0;
+					var deltaResearch = function (dr) {
+						return A2(_user$project$StatusEffects$member, _user$project$StatusEffects$Amphetamine, model.statusEffects) ? (dr + (dr * 0.25)) : dr;
+					}(dt);
+					return (_elm_lang$core$Native_Utils.cmp(_p19 + deltaResearch, _p20) > -1) ? _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							abilities: A2(_Gizra$elm_all_set$EverySet$insert, _p17, model.abilities),
+							abilities: A2(_user$project$Abilities$insert, _p18, model.abilities),
 							survivor: _elm_lang$core$Native_Utils.update(
 								survivor,
 								{action: _user$project$Action$Idling})
@@ -11654,25 +12031,34 @@ var _user$project$Main$tickAction = F2(
 								{
 									action: A2(
 										_user$project$Action$Researching,
-										_p17,
-										{ctor: '_Tuple2', _0: _p18 + dt, _1: _p19})
+										_p18,
+										{ctor: '_Tuple2', _0: _p19 + deltaResearch, _1: _p20})
 								})
 						});
 			}
 		}
 	});
-var _user$project$Main$oxygenPerSecond = function (model) {
-	var produced = function () {
-		var _p20 = model.powerTarget;
-		if (_p20.ctor === 'LifeSupport') {
-			return _elm_lang$core$Native_Utils.eq(model.power.curr, 0) ? 0 : 1;
+var _user$project$Main$oxygenConsumedPerSecond = function (model) {
+	var consumedBySurvivor = function () {
+		if (model.survivor.suspended) {
+			return 0.5;
 		} else {
-			return 0;
+			var consciousBase = 3.0;
+			return A2(_user$project$Abilities$member, _user$project$Ability$ShallowBreathing, model.abilities) ? (consciousBase - 0.75) : consciousBase;
 		}
 	}();
-	var consumed1 = model.survivor.suspended ? 0.1 : 1.5;
-	var consumed2 = ((!model.survivor.suspended) && A2(_Gizra$elm_all_set$EverySet$member, _user$project$Ability$ShallowBreathing, model.abilities)) ? (consumed1 - 0.75) : consumed1;
-	return produced - consumed2;
+	return consumedBySurvivor;
+};
+var _user$project$Main$oxygenProducedPerSecond = function (model) {
+	var _p21 = model.powerTarget;
+	if (_p21.ctor === 'LifeSupport') {
+		return _elm_lang$core$Native_Utils.eq(model.power.curr, 0) ? 0 : 1;
+	} else {
+		return 0;
+	}
+};
+var _user$project$Main$oxygenNetPerSecond = function (model) {
+	return _user$project$Main$oxygenProducedPerSecond(model) - _user$project$Main$oxygenConsumedPerSecond(model);
 };
 var _user$project$Main$tickOxygen = F2(
 	function (dt, model) {
@@ -11691,11 +12077,11 @@ var _user$project$Main$tickOxygen = F2(
 								function (x, y) {
 									return x + y;
 								}),
-							dt * _user$project$Main$oxygenPerSecond(model),
+							dt * _user$project$Main$oxygenNetPerSecond(model),
 							oxygen.curr)))
 			});
-		var _p21 = model;
-		var survivor = _p21.survivor;
+		var _p22 = model;
+		var survivor = _p22.survivor;
 		var nextSurvivor = _elm_lang$core$Native_Utils.update(
 			survivor,
 			{
@@ -11705,128 +12091,72 @@ var _user$project$Main$tickOxygen = F2(
 			model,
 			{oxygen: nextOxygen, survivor: nextSurvivor, paused: nextSurvivor.dead});
 	});
+var _user$project$Main$foodConsumedPerSecond = function (model) {
+	return A2(
+		_elm_lang$core$Debug$log,
+		'food consumed per second',
+		function (consumed) {
+			return A2(_user$project$StatusEffects$member, _user$project$StatusEffects$Amphetamine, model.statusEffects) ? (consumed * 0.5) : consumed;
+		}(
+			model.survivor.suspended ? 0.2 : 2.0));
+};
+var _user$project$Main$foodProducedPerSecond = function (model) {
+	var _p23 = model.powerTarget;
+	if (_p23.ctor === 'LifeSupport') {
+		return _elm_lang$core$Native_Utils.eq(model.power.curr, 0) ? 0 : 0.8;
+	} else {
+		return 0;
+	}
+};
+var _user$project$Main$foodNetPerSecond = function (model) {
+	return _user$project$Main$foodProducedPerSecond(model) - _user$project$Main$foodConsumedPerSecond(model);
+};
+var _user$project$Main$tickFood = F2(
+	function (dt, model) {
+		var food = model.food;
+		var nextFood = _elm_lang$core$Native_Utils.update(
+			food,
+			{
+				curr: A2(
+					_elm_lang$core$Basics$max,
+					0,
+					A2(
+						_elm_lang$core$Basics$min,
+						food.max,
+						A2(
+							F2(
+								function (x, y) {
+									return x + y;
+								}),
+							dt * _user$project$Main$foodNetPerSecond(model),
+							food.curr)))
+			});
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{food: nextFood});
+	});
 var _user$project$Main$tickPod = F2(
 	function (dt, model) {
-		return A2(
-			_user$project$Main$tickAction,
-			dt,
+		return function (m) {
+			return _elm_lang$core$Native_Utils.update(
+				m,
+				{
+					statusEffects: A2(_user$project$StatusEffects$tick, dt, m.statusEffects)
+				});
+		}(
 			A2(
-				_user$project$Main$tickMatterGrowth,
+				_user$project$Main$tickAction,
 				dt,
 				A2(
-					_user$project$Main$tickOxygen,
+					_user$project$Main$tickMatterGrowth,
 					dt,
-					A2(_user$project$Main$tickPower, dt, model))));
-	});
-var _user$project$Main$update = F2(
-	function (msg, model) {
-		var _p22 = msg;
-		switch (_p22.ctor) {
-			case 'NoOp':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			case 'DismissHelp':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{showHelp: false}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'SetPaused':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{paused: _p22._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Tick':
-				var dt = _elm_lang$core$Time$inSeconds(_p22._0);
-				var nextModel = A2(_user$project$Main$tickPod, dt, model);
-				return {ctor: '_Tuple2', _0: nextModel, _1: _elm_lang$core$Platform_Cmd$none};
-			case 'SetCharging':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{charging: _p22._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'SetSurvivorSuspension':
-				var survivor = model.survivor;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							survivor: _elm_lang$core$Native_Utils.update(
-								survivor,
-								{suspended: _p22._0})
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'SetSurvivorAction':
-				var survivor = model.survivor;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							survivor: _elm_lang$core$Native_Utils.update(
-								survivor,
-								{action: _p22._0})
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'SetPowerTarget':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{powerTarget: _p22._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'SetActionTab':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{actionTab: _p22._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			default:
-				var _p25 = _p22._0;
-				var price = function () {
-					var _p23 = _p25;
-					if (_p23.ctor === 'SolarPanel') {
-						return _user$project$Price$priceOfSolarPanel(model.inventory.solarPanels);
-					} else {
-						return _user$project$Price$priceOfMatterBin(model.inventory.matterBins);
-					}
-				}();
-				var _p24 = model;
-				var survivor = _p24.survivor;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							survivor: _elm_lang$core$Native_Utils.update(
-								survivor,
-								{
-									action: A2(
-										_user$project$Action$Fabricating,
-										_p25,
-										A2(_user$project$Quantity$Quantity, 0, price))
-								})
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-		}
-	});
-var _user$project$Main$Survivor = F3(
-	function (a, b, c) {
-		return {suspended: a, dead: b, action: c};
+					A2(
+						_user$project$Main$tickFood,
+						dt,
+						A2(
+							_user$project$Main$tickOxygen,
+							dt,
+							A2(_user$project$Main$tickPower, dt, model))))));
 	});
 var _user$project$Main$Model = function (a) {
 	return function (b) {
@@ -11839,7 +12169,13 @@ var _user$project$Main$Model = function (a) {
 								return function (i) {
 									return function (j) {
 										return function (k) {
-											return {survivor: a, power: b, powerTarget: c, oxygen: d, matter: e, charging: f, paused: g, inventory: h, abilities: i, actionTab: j, showHelp: k};
+											return function (l) {
+												return function (m) {
+													return function (n) {
+														return {survivor: a, power: b, powerTarget: c, oxygen: d, food: e, matter: f, charging: g, paused: h, inventory: i, statusEffects: j, abilities: k, isDev: l, actionTab: m, showHelp: n};
+													};
+												};
+											};
 										};
 									};
 								};
@@ -11851,132 +12187,83 @@ var _user$project$Main$Model = function (a) {
 		};
 	};
 };
+var _user$project$Main$Flags = function (a) {
+	return {isDev: a};
+};
 var _user$project$Main$Research = {ctor: 'Research'};
 var _user$project$Main$Fabrication = {ctor: 'Fabrication'};
 var _user$project$Main$MatterCollector = {ctor: 'MatterCollector'};
 var _user$project$Main$LifeSupport = {ctor: 'LifeSupport'};
 var _user$project$Main$initPodState = {
-	survivor: {suspended: true, action: _user$project$Action$Idling, dead: false},
+	survivor: _user$project$Survivor$init,
 	power: A2(_user$project$Quantity$Quantity, 30, 100),
 	powerTarget: _user$project$Main$LifeSupport,
 	oxygen: A2(_user$project$Quantity$Quantity, 50, 100),
+	food: A2(_user$project$Quantity$Quantity, 30, 50),
 	matter: A2(_user$project$Quantity$Quantity, 20, 100),
 	charging: false,
 	paused: false,
 	inventory: _user$project$Inventory$empty,
-	abilities: _Gizra$elm_all_set$EverySet$empty,
+	statusEffects: _user$project$StatusEffects$empty,
+	abilities: _user$project$Abilities$empty,
+	isDev: false,
 	actionTab: _user$project$Main$Fabrication,
 	showHelp: true
 };
-var _user$project$Main$init = {ctor: '_Tuple2', _0: _user$project$Main$initPodState, _1: _elm_lang$core$Platform_Cmd$none};
-var _user$project$Main$DismissHelp = {ctor: 'DismissHelp'};
-var _user$project$Main$viewHelp = A2(
-	_elm_lang$html$Html$div,
-	{ctor: '[]'},
-	{
-		ctor: '::',
-		_0: A2(
-			_elm_lang$html$Html$p,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html$text('\n                An escape pod has crash-landed on a planet with a single survivor.\n            '),
-				_1: {ctor: '[]'}
-			}),
-		_1: {
+var _user$project$Main$init = function (_p24) {
+	var _p25 = _p24;
+	return {
+		ctor: '_Tuple2',
+		_0: _elm_lang$core$Native_Utils.update(
+			_user$project$Main$initPodState,
+			{isDev: _p25.isDev}),
+		_1: _elm_lang$core$Platform_Cmd$none
+	};
+};
+var _user$project$Main$IncResources = {ctor: 'IncResources'};
+var _user$project$Main$AddAbility = function (a) {
+	return {ctor: 'AddAbility', _0: a};
+};
+var _user$project$Main$AddInventory = function (a) {
+	return {ctor: 'AddInventory', _0: a};
+};
+var _user$project$Main$AddStatusEffect = function (a) {
+	return {ctor: 'AddStatusEffect', _0: a};
+};
+var _user$project$Main$DevCheat = function (a) {
+	return {ctor: 'DevCheat', _0: a};
+};
+var _user$project$Main$viewDevBar = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
 			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$p,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('\n                The survivor can be suspended in the pod\'s stasis goo to consume very few resources.\n                Or you can wake them up to build / research improvements that will help them get\n                off the planet.\n            '),
-					_1: {ctor: '[]'}
-				}),
+			_0: _elm_lang$html$Html$text('You are in dev mode. Double-click fabrications / upgrades to insta-buy them for free.'),
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$ul,
-					{ctor: '[]'},
+					_elm_lang$html$Html$button,
 					{
 						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$li,
-							{ctor: '[]'},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('\n                The pod\'s weak energy grid can only power either the matter collector or the life support system\n             '),
-								_1: {ctor: '[]'}
-							}),
+						_0: _elm_lang$html$Html_Events$onClick(
+							_user$project$Main$DevCheat(_user$project$Main$IncResources)),
 						_1: {
 							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$li,
-								{ctor: '[]'},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text('\n                Until you fabricate some energy subsystems, you\'ll have to click and hold on the Power\n                Uplink button to charge the pod remotely.\n             '),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$li,
-									{ctor: '[]'},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('\n                The survivor can only work on their task when conscious.\n             '),
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$li,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('\n                The survivor dies once any of the life support vitals reaches zero.\n             '),
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$li,
-											{ctor: '[]'},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('\n                Fabrication costs power and matter. Research only costs time.\n             '),
-												_1: {ctor: '[]'}
-											}),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$button,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$DismissHelp),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('btn'),
-								_1: {ctor: '[]'}
-							}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text('Dismiss Help'),
+							_0: _elm_lang$html$Html_Attributes$class('btn'),
 							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
+						}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Increase Resources'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
 			}
-		}
-	});
+		});
+};
+var _user$project$Main$DismissHelp = {ctor: 'DismissHelp'};
 var _user$project$Main$BeginFabricating = function (a) {
 	return {ctor: 'BeginFabricating', _0: a};
 };
@@ -12010,36 +12297,112 @@ var _user$project$Main$SetSurvivorAction = function (a) {
 	return {ctor: 'SetSurvivorAction', _0: a};
 };
 var _user$project$Main$viewResearchTab = function (model) {
+	var viewPrice = function (price) {
+		return A2(
+			_elm_lang$html$Html$strong,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						' (',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(price),
+							' seconds) '))),
+				_1: {ctor: '[]'}
+			});
+	};
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
 		{
 			ctor: '::',
 			_0: A2(
-				_elm_lang$html$Html$p,
+				_elm_lang$html$Html$ul,
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('The survivor can research upgrades while they are conscious.'),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$ul,
-					{ctor: '[]'},
-					{
+					_0: function () {
+						var isSelected = function () {
+							var _p26 = model.survivor.action;
+							if ((_p26.ctor === 'Researching') && (_p26._0.ctor === 'ShallowBreathing')) {
+								return true;
+							} else {
+								return false;
+							}
+						}();
+						return A2(_user$project$Abilities$member, _user$project$Ability$ShallowBreathing, model.abilities) ? _elm_lang$html$Html$text('') : A2(
+							_elm_lang$html$Html$li,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(
+									_user$project$Main$SetSurvivorAction(
+										A2(
+											_user$project$Action$Researching,
+											_user$project$Ability$ShallowBreathing,
+											{ctor: '_Tuple2', _0: 0, _1: 5}))),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onDoubleClick(
+										_user$project$Main$DevCheat(
+											_user$project$Main$AddAbility(_user$project$Ability$ShallowBreathing))),
+									_1: {ctor: '[]'}
+								}
+							},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$button,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$classList(
+											{
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: 'btn', _1: true},
+												_1: {
+													ctor: '::',
+													_0: {ctor: '_Tuple2', _0: 'btn-primary', _1: isSelected},
+													_1: {ctor: '[]'}
+												}
+											}),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$disabled(isSelected),
+											_1: {ctor: '[]'}
+										}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('Shallow Breathing'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: viewPrice(
+										_user$project$Ability$priceOf(_user$project$Ability$ShallowBreathing)),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_user$project$Abilities$descriptionOf(_user$project$Ability$ShallowBreathing)),
+										_1: {ctor: '[]'}
+									}
+								}
+							});
+					}(),
+					_1: {
 						ctor: '::',
 						_0: function () {
 							var isSelected = function () {
-								var _p26 = model.survivor.action;
-								if ((_p26.ctor === 'Researching') && (_p26._0.ctor === 'ShallowBreathing')) {
+								var _p27 = model.survivor.action;
+								if ((_p27.ctor === 'Researching') && (_p27._0.ctor === 'Engineering')) {
 									return true;
 								} else {
 									return false;
 								}
 							}();
-							return A2(_Gizra$elm_all_set$EverySet$member, _user$project$Ability$ShallowBreathing, model.abilities) ? _elm_lang$html$Html$text('') : A2(
+							return A2(_user$project$Abilities$member, _user$project$Ability$Engineering, model.abilities) ? _elm_lang$html$Html$text('') : A2(
 								_elm_lang$html$Html$li,
 								{
 									ctor: '::',
@@ -12047,9 +12410,15 @@ var _user$project$Main$viewResearchTab = function (model) {
 										_user$project$Main$SetSurvivorAction(
 											A2(
 												_user$project$Action$Researching,
-												_user$project$Ability$ShallowBreathing,
-												{ctor: '_Tuple2', _0: 0, _1: 5}))),
-									_1: {ctor: '[]'}
+												_user$project$Ability$Engineering,
+												{ctor: '_Tuple2', _0: 0, _1: 100}))),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Events$onDoubleClick(
+											_user$project$Main$DevCheat(
+												_user$project$Main$AddAbility(_user$project$Ability$Engineering))),
+										_1: {ctor: '[]'}
+									}
 								},
 								{
 									ctor: '::',
@@ -12075,78 +12444,26 @@ var _user$project$Main$viewResearchTab = function (model) {
 										},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('Shallow Breathing'),
+											_0: _elm_lang$html$Html$text('Engineering'),
 											_1: {ctor: '[]'}
 										}),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html$text(' Survivor consumes less oxygen while conscious'),
-										_1: {ctor: '[]'}
+										_0: viewPrice(
+											_user$project$Ability$priceOf(_user$project$Ability$Engineering)),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(
+												_user$project$Abilities$descriptionOf(_user$project$Ability$Engineering)),
+											_1: {ctor: '[]'}
+										}
 									}
 								});
 						}(),
-						_1: {
-							ctor: '::',
-							_0: function () {
-								var isSelected = function () {
-									var _p27 = model.survivor.action;
-									if ((_p27.ctor === 'Researching') && (_p27._0.ctor === 'Engineering')) {
-										return true;
-									} else {
-										return false;
-									}
-								}();
-								return A2(
-									_elm_lang$html$Html$li,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											_user$project$Main$SetSurvivorAction(
-												A2(
-													_user$project$Action$Researching,
-													_user$project$Ability$Engineering,
-													{ctor: '_Tuple2', _0: 0, _1: 100}))),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$button,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$classList(
-													{
-														ctor: '::',
-														_0: {ctor: '_Tuple2', _0: 'btn', _1: true},
-														_1: {
-															ctor: '::',
-															_0: {ctor: '_Tuple2', _0: 'btn-primary', _1: isSelected},
-															_1: {ctor: '[]'}
-														}
-													}),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$disabled(isSelected),
-													_1: {ctor: '[]'}
-												}
-											},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('Engineering'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html$text(' Survivor becomes more efficient with fabricator'),
-											_1: {ctor: '[]'}
-										}
-									});
-							}(),
-							_1: {ctor: '[]'}
-						}
-					}),
-				_1: {ctor: '[]'}
-			}
+						_1: {ctor: '[]'}
+					}
+				}),
+			_1: {ctor: '[]'}
 		});
 };
 var _user$project$Main$SetSurvivorSuspension = function (a) {
@@ -12520,7 +12837,7 @@ var _user$project$Main$viewStats = function (model) {
 																		{
 																			ctor: '::',
 																			_0: function () {
-																				var rate = _user$project$Main$oxygenPerSecond(model);
+																				var rate = _user$project$Main$oxygenNetPerSecond(model);
 																				return A2(
 																					_elm_lang$html$Html$span,
 																					{ctor: '[]'},
@@ -12589,7 +12906,81 @@ var _user$project$Main$viewStats = function (model) {
 																				ctor: '::',
 																				_0: _user$project$Spectre$meter(
 																					{value: model.oxygen.curr, min: 0, max: model.oxygen.max, low: 25, high: 50, optimum: model.oxygen.max}),
-																				_1: {ctor: '[]'}
+																				_1: {
+																					ctor: '::',
+																					_0: function () {
+																						var rate = _user$project$Main$foodNetPerSecond(model);
+																						return A2(
+																							_elm_lang$html$Html$span,
+																							{ctor: '[]'},
+																							{
+																								ctor: '::',
+																								_0: _elm_lang$html$Html$text('Food: '),
+																								_1: {
+																									ctor: '::',
+																									_0: _elm_lang$html$Html$text(
+																										A2(_myrho$elm_round$Round$round, 1, model.food.curr)),
+																									_1: {
+																										ctor: '::',
+																										_0: _elm_lang$html$Html$text('/'),
+																										_1: {
+																											ctor: '::',
+																											_0: _elm_lang$html$Html$text(
+																												A2(_myrho$elm_round$Round$round, 1, model.food.max)),
+																											_1: {
+																												ctor: '::',
+																												_0: _elm_lang$html$Html$text(' '),
+																												_1: {
+																													ctor: '::',
+																													_0: (_elm_lang$core$Native_Utils.cmp(rate, 0) > -1) ? A2(
+																														_elm_lang$html$Html$span,
+																														{
+																															ctor: '::',
+																															_0: _elm_lang$html$Html_Attributes$class('text-green'),
+																															_1: {ctor: '[]'}
+																														},
+																														{
+																															ctor: '::',
+																															_0: _elm_lang$html$Html$text(
+																																A2(
+																																	_elm_lang$core$Basics_ops['++'],
+																																	'+',
+																																	A2(
+																																		_elm_lang$core$Basics_ops['++'],
+																																		A2(_myrho$elm_round$Round$round, 1, rate),
+																																		'/sec'))),
+																															_1: {ctor: '[]'}
+																														}) : A2(
+																														_elm_lang$html$Html$span,
+																														{
+																															ctor: '::',
+																															_0: _elm_lang$html$Html_Attributes$class('text-red'),
+																															_1: {ctor: '[]'}
+																														},
+																														{
+																															ctor: '::',
+																															_0: _elm_lang$html$Html$text(
+																																A2(
+																																	_elm_lang$core$Basics_ops['++'],
+																																	A2(_myrho$elm_round$Round$round, 1, rate),
+																																	'/sec')),
+																															_1: {ctor: '[]'}
+																														}),
+																													_1: {ctor: '[]'}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							});
+																					}(),
+																					_1: {
+																						ctor: '::',
+																						_0: _user$project$Spectre$meter(
+																							{value: model.food.curr, min: 0, max: model.food.max, low: model.food.max * 0.25, high: model.food.max * 0.5, optimum: model.food.max}),
+																						_1: {ctor: '[]'}
+																					}
+																				}
 																			}
 																		}),
 																	_1: {ctor: '[]'}
@@ -12748,46 +13139,234 @@ var _user$project$Main$subscriptions = function (model) {
 		});
 };
 var _user$project$Main$NoOp = {ctor: 'NoOp'};
+var _user$project$Main$update = F2(
+	function (msg, model) {
+		update:
+		while (true) {
+			var _p29 = msg;
+			switch (_p29.ctor) {
+				case 'NoOp':
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				case 'DismissHelp':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{showHelp: false}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'SetPaused':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{paused: _p29._0}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Tick':
+					var dt = _elm_lang$core$Time$inSeconds(_p29._0);
+					var nextModel = A2(_user$project$Main$tickPod, dt, model);
+					return {ctor: '_Tuple2', _0: nextModel, _1: _elm_lang$core$Platform_Cmd$none};
+				case 'SetCharging':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{charging: _p29._0}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'SetSurvivorSuspension':
+					var survivor = model.survivor;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								survivor: _elm_lang$core$Native_Utils.update(
+									survivor,
+									{suspended: _p29._0})
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'SetSurvivorAction':
+					var survivor = model.survivor;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								survivor: _elm_lang$core$Native_Utils.update(
+									survivor,
+									{action: _p29._0})
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'SetPowerTarget':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{powerTarget: _p29._0}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'SetActionTab':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{actionTab: _p29._0}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'BeginFabricating':
+					var _p32 = _p29._0;
+					var price = function () {
+						var _p30 = _p32;
+						switch (_p30.ctor) {
+							case 'SolarPanel':
+								return A2(_user$project$Item$matterCostOf, _p32, model.inventory.solarPanels);
+							case 'MatterBin':
+								return A2(_user$project$Item$matterCostOf, _p32, model.inventory.matterBins);
+							default:
+								return A2(_user$project$Item$matterCostOf, _p32, 0);
+						}
+					}();
+					var _p31 = model;
+					var survivor = _p31.survivor;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								survivor: _elm_lang$core$Native_Utils.update(
+									survivor,
+									{
+										action: A2(
+											_user$project$Action$Fabricating,
+											_p32,
+											A2(_user$project$Quantity$Quantity, 0, price))
+									})
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				default:
+					if (!model.isDev) {
+						var _v16 = _user$project$Main$NoOp,
+							_v17 = model;
+						msg = _v16;
+						model = _v17;
+						continue update;
+					} else {
+						var nextModel = function () {
+							var _p33 = _p29._0;
+							switch (_p33.ctor) {
+								case 'AddStatusEffect':
+									return _elm_lang$core$Native_Utils.update(
+										model,
+										{
+											statusEffects: A2(_user$project$StatusEffects$insert, _p33._0, model.statusEffects)
+										});
+								case 'AddAbility':
+									return _elm_lang$core$Native_Utils.update(
+										model,
+										{
+											abilities: A2(_user$project$Abilities$insert, _p33._0, model.abilities)
+										});
+								case 'AddInventory':
+									var inventory = model.inventory;
+									return _elm_lang$core$Native_Utils.update(
+										model,
+										{
+											inventory: function () {
+												var _p34 = _p33._0;
+												switch (_p34.ctor) {
+													case 'SolarPanel':
+														return _elm_lang$core$Native_Utils.update(
+															inventory,
+															{solarPanels: inventory.solarPanels + 1});
+													case 'MatterBin':
+														return _elm_lang$core$Native_Utils.update(
+															inventory,
+															{matterBins: inventory.matterBins + 1});
+													default:
+														return inventory;
+												}
+											}()
+										});
+								default:
+									var maxFood = model.food.max;
+									var maxOxygen = model.oxygen.max;
+									var maxMatter = model.matter.max;
+									var maxPower = model.power.max;
+									return _elm_lang$core$Native_Utils.update(
+										model,
+										{
+											power: A2(_user$project$Quantity$Quantity, maxPower, maxPower),
+											matter: A2(_user$project$Quantity$Quantity, maxMatter, maxMatter),
+											oxygen: A2(_user$project$Quantity$Quantity, maxOxygen, maxOxygen),
+											food: A2(_user$project$Quantity$Quantity, maxFood, maxFood)
+										});
+							}
+						}();
+						return {ctor: '_Tuple2', _0: nextModel, _1: _elm_lang$core$Platform_Cmd$none};
+					}
+			}
+		}
+	});
 var _user$project$Main$viewFabricationTab = function (model) {
+	var viewPrice = function (price) {
+		return A2(
+			_elm_lang$html$Html$strong,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						' (',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(price),
+							' matter)'))),
+				_1: {ctor: '[]'}
+			});
+	};
+	var efficiency = _user$project$Main$getFabricatorEfficiency(model);
+	var percentString = A2(
+		_elm_lang$core$Basics_ops['++'],
+		A2(_myrho$elm_round$Round$round, 2, efficiency * 100),
+		'%');
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: function () {
-				var efficiency = _user$project$Main$getFabricatorEfficiency(model);
-				var percentString = A2(
-					_elm_lang$core$Basics_ops['++'],
-					A2(_myrho$elm_round$Round$round, 2, efficiency * 100),
-					'%');
-				return A2(
-					_elm_lang$html$Html$p,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$strong,
-							{ctor: '[]'},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									A2(_elm_lang$core$Basics_ops['++'], percentString, ' Efficiency: ')),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
+			_0: A2(
+				_elm_lang$html$Html$p,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$strong,
+						{ctor: '[]'},
+						{
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(
+								A2(_elm_lang$core$Basics_ops['++'], percentString, ' Efficiency: ')),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'For every 1.00 matter consumed, ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'For every 1.00 matter consumed, ',
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										A2(_myrho$elm_round$Round$round, 2, efficiency),
-										' matter is fabricated.'))),
-							_1: {ctor: '[]'}
-						}
-					});
-			}(),
+									A2(_myrho$elm_round$Round$round, 2, efficiency),
+									' matter is fabricated.'))),
+						_1: {ctor: '[]'}
+					}
+				}),
 			_1: {
 				ctor: '::',
 				_0: A2(
@@ -12795,73 +13374,35 @@ var _user$project$Main$viewFabricationTab = function (model) {
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('The survivor can build itemswhile they are conscious and there is matter in the matter collector.'),
+						_0: _elm_lang$html$Html$text('The survivor can build items while they are conscious and there is matter in the matter collector.'),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$ul,
-						{ctor: '[]'},
+						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: function () {
-								var isSelected = function () {
-									var _p29 = model.survivor.action;
-									if ((_p29.ctor === 'Fabricating') && (_p29._0.ctor === 'SolarPanel')) {
-										return true;
-									} else {
-										return false;
-									}
-								}();
-								return A2(
-									_elm_lang$html$Html$li,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											isSelected ? _user$project$Main$NoOp : _user$project$Main$BeginFabricating(_user$project$Item$SolarPanel)),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$button,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$classList(
-													{
-														ctor: '::',
-														_0: {ctor: '_Tuple2', _0: 'btn', _1: true},
-														_1: {
-															ctor: '::',
-															_0: {ctor: '_Tuple2', _0: 'btn-primary', _1: isSelected},
-															_1: {ctor: '[]'}
-														}
-													}),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$disabled(isSelected),
-													_1: {ctor: '[]'}
-												}
-											},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('Solar Panel'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html$text(' Solar panels allow the pod to charge passively'),
-											_1: {ctor: '[]'}
-										}
-									});
-							}(),
+							_0: _elm_lang$html$Html_Attributes$class('divider text-center'),
 							_1: {
 								ctor: '::',
+								_0: A2(_elm_lang$html$Html_Attributes$attribute, 'data-content', 'Permanent'),
+								_1: {ctor: '[]'}
+							}
+						},
+						{ctor: '[]'}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$ul,
+							{ctor: '[]'},
+							{
+								ctor: '::',
 								_0: function () {
+									var price = _user$project$Price$priceOfSolarPanel(model.inventory.solarPanels);
 									var isSelected = function () {
-										var _p30 = model.survivor.action;
-										if ((_p30.ctor === 'Fabricating') && (_p30._0.ctor === 'MatterBin')) {
+										var _p35 = model.survivor.action;
+										if ((_p35.ctor === 'Fabricating') && (_p35._0.ctor === 'SolarPanel')) {
 											return true;
 										} else {
 											return false;
@@ -12872,8 +13413,14 @@ var _user$project$Main$viewFabricationTab = function (model) {
 										{
 											ctor: '::',
 											_0: _elm_lang$html$Html_Events$onClick(
-												isSelected ? _user$project$Main$NoOp : _user$project$Main$BeginFabricating(_user$project$Item$MatterBin)),
-											_1: {ctor: '[]'}
+												isSelected ? _user$project$Main$NoOp : _user$project$Main$BeginFabricating(_user$project$Item$SolarPanel)),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onDoubleClick(
+													_user$project$Main$DevCheat(
+														_user$project$Main$AddInventory(_user$project$Item$SolarPanel))),
+												_1: {ctor: '[]'}
+											}
 										},
 										{
 											ctor: '::',
@@ -12899,20 +13446,183 @@ var _user$project$Main$viewFabricationTab = function (model) {
 												},
 												{
 													ctor: '::',
-													_0: _elm_lang$html$Html$text('Matter Bin'),
+													_0: _elm_lang$html$Html$text('Solar Panel'),
 													_1: {ctor: '[]'}
 												}),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$html$Html$text(' +100 max matter storage'),
-												_1: {ctor: '[]'}
+												_0: viewPrice(price),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html$text(' Solar panels allow the pod to charge passively'),
+													_1: {ctor: '[]'}
+												}
 											}
 										});
 								}(),
+								_1: {
+									ctor: '::',
+									_0: function () {
+										var price = _user$project$Price$priceOfSolarPanel(model.inventory.matterBins);
+										var isSelected = function () {
+											var _p36 = model.survivor.action;
+											if ((_p36.ctor === 'Fabricating') && (_p36._0.ctor === 'MatterBin')) {
+												return true;
+											} else {
+												return false;
+											}
+										}();
+										return A2(
+											_elm_lang$html$Html$li,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onClick(
+													isSelected ? _user$project$Main$NoOp : _user$project$Main$BeginFabricating(_user$project$Item$MatterBin)),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onDoubleClick(
+														_user$project$Main$DevCheat(
+															_user$project$Main$AddInventory(_user$project$Item$MatterBin))),
+													_1: {ctor: '[]'}
+												}
+											},
+											{
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$button,
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$classList(
+															{
+																ctor: '::',
+																_0: {ctor: '_Tuple2', _0: 'btn', _1: true},
+																_1: {
+																	ctor: '::',
+																	_0: {ctor: '_Tuple2', _0: 'btn-primary', _1: isSelected},
+																	_1: {ctor: '[]'}
+																}
+															}),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$disabled(isSelected),
+															_1: {ctor: '[]'}
+														}
+													},
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html$text('Matter Bin'),
+														_1: {ctor: '[]'}
+													}),
+												_1: {
+													ctor: '::',
+													_0: viewPrice(price),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html$text(' +100 max matter storage'),
+														_1: {ctor: '[]'}
+													}
+												}
+											});
+									}(),
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('divider text-center'),
+									_1: {
+										ctor: '::',
+										_0: A2(_elm_lang$html$Html_Attributes$attribute, 'data-content', 'Temporary Buffs'),
+										_1: {ctor: '[]'}
+									}
+								},
+								{ctor: '[]'}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$ul,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: function () {
+											var price = 12;
+											var isSelected = function () {
+												var _p37 = model.survivor.action;
+												if ((_p37.ctor === 'Fabricating') && (_p37._0.ctor === 'Amphetamine')) {
+													return true;
+												} else {
+													return false;
+												}
+											}();
+											return A2(
+												_elm_lang$html$Html$li,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onClick(
+														isSelected ? _user$project$Main$NoOp : _user$project$Main$BeginFabricating(_user$project$Item$Amphetamine)),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html_Events$onDoubleClick(
+															_user$project$Main$DevCheat(
+																_user$project$Main$AddStatusEffect(_user$project$StatusEffects$Amphetamine))),
+														_1: {ctor: '[]'}
+													}
+												},
+												{
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$button,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$classList(
+																{
+																	ctor: '::',
+																	_0: {ctor: '_Tuple2', _0: 'btn', _1: true},
+																	_1: {
+																		ctor: '::',
+																		_0: {ctor: '_Tuple2', _0: 'btn-primary', _1: isSelected},
+																		_1: {ctor: '[]'}
+																	}
+																}),
+															_1: {
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$disabled(isSelected),
+																_1: {ctor: '[]'}
+															}
+														},
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html$text('Amphetamine'),
+															_1: {ctor: '[]'}
+														}),
+													_1: {
+														ctor: '::',
+														_0: viewPrice(price),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html$text(
+																A2(
+																	F2(
+																		function (x, y) {
+																			return A2(_elm_lang$core$Basics_ops['++'], x, y);
+																		}),
+																	' ',
+																	_user$project$StatusEffects$descriptionOf(_user$project$StatusEffects$Amphetamine))),
+															_1: {ctor: '[]'}
+														}
+													}
+												});
+										}(),
+										_1: {ctor: '[]'}
+									}),
 								_1: {ctor: '[]'}
 							}
-						}),
-					_1: {ctor: '[]'}
+						}
+					}
 				}
 			}
 		});
@@ -12920,168 +13630,287 @@ var _user$project$Main$viewFabricationTab = function (model) {
 var _user$project$Main$viewActions = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
-		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('panel'),
+			_1: {ctor: '[]'}
+		},
 		{
 			ctor: '::',
 			_0: A2(
-				_elm_lang$html$Html$ul,
+				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('tab tab-block'),
+					_0: _elm_lang$html$Html_Attributes$class('panel-header'),
 					_1: {ctor: '[]'}
 				},
 				{
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$li,
+						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class(
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									'tab-item ',
-									function () {
-										var _p31 = model.actionTab;
-										if (_p31.ctor === 'Fabrication') {
-											return 'active';
-										} else {
-											return '';
-										}
-									}())),
+							_0: _elm_lang$html$Html_Attributes$class('panel-title'),
 							_1: {ctor: '[]'}
 						},
 						{
 							ctor: '::',
 							_0: A2(
-								_elm_lang$html$Html$a,
+								_elm_lang$html$Html$span,
+								{ctor: '[]'},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Events$onClick(
-										_user$project$Main$SetActionTab(_user$project$Main$Fabrication)),
-									_1: {
+									_0: _elm_lang$html$Html$text('Current Task: '),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$span,
+									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$href('javascript:void(0)'),
+										_0: _elm_lang$html$Html_Attributes$class(
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'label ',
+												_user$project$Survivor$isIdling(model.survivor) ? 'label-default' : 'label-success')),
 										_1: {ctor: '[]'}
-									}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text('Fabrication '),
-									_1: {
+									},
+									{
 										ctor: '::',
 										_0: function () {
-											var _p32 = model.survivor.action;
-											if (_p32.ctor === 'Fabricating') {
-												return A2(
-													_elm_lang$html$Html$span,
+											var _p38 = model.survivor.action;
+											switch (_p38.ctor) {
+												case 'Idling':
+													return _elm_lang$html$Html$text('No task');
+												case 'Fabricating':
+													return _elm_lang$html$Html$text('Fabricating');
+												default:
+													return _elm_lang$html$Html$text('Researching');
+											}
+										}(),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(' '),
+											_1: {
+												ctor: '::',
+												_0: _user$project$Survivor$isIdling(model.survivor) ? _elm_lang$html$Html$text('') : A2(
+													_elm_lang$html$Html$button,
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$class('label label-primary'),
-														_1: {ctor: '[]'}
+														_0: _elm_lang$html$Html_Attributes$class('btn btn-sm'),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Events$onClick(
+																_user$project$Main$SetSurvivorAction(_user$project$Action$Idling)),
+															_1: {ctor: '[]'}
+														}
 													},
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html$text(
+														_0: _elm_lang$html$Html$text('Cancel'),
+														_1: {ctor: '[]'}
+													}),
+												_1: {ctor: '[]'}
+											}
+										}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('panel-body'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$div,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('divider'),
+										_1: {ctor: '[]'}
+									},
+									{ctor: '[]'}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$ul,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('tab tab-block'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$li,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Attributes$class(
+														A2(
+															_elm_lang$core$Basics_ops['++'],
+															'tab-item ',
+															function () {
+																var _p39 = model.actionTab;
+																if (_p39.ctor === 'Fabrication') {
+																	return 'active';
+																} else {
+																	return '';
+																}
+															}())),
+													_1: {ctor: '[]'}
+												},
+												{
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$a,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Events$onClick(
+																_user$project$Main$SetActionTab(_user$project$Main$Fabrication)),
+															_1: {
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$href('javascript:void(0)'),
+																_1: {ctor: '[]'}
+															}
+														},
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html$text('Fabrication '),
+															_1: {
+																ctor: '::',
+																_0: function () {
+																	var _p40 = model.survivor.action;
+																	if (_p40.ctor === 'Fabricating') {
+																		return A2(
+																			_elm_lang$html$Html$span,
+																			{
+																				ctor: '::',
+																				_0: _elm_lang$html$Html_Attributes$class('label label-primary'),
+																				_1: {ctor: '[]'}
+																			},
+																			{
+																				ctor: '::',
+																				_0: _elm_lang$html$Html$text(
+																					A2(
+																						_elm_lang$core$Basics_ops['++'],
+																						A2(_myrho$elm_round$Round$round, 2, (_p40._1.curr / _p40._1.max) * 100),
+																						'%')),
+																				_1: {ctor: '[]'}
+																			});
+																	} else {
+																		return _elm_lang$html$Html$text('');
+																	}
+																}(),
+																_1: {ctor: '[]'}
+															}
+														}),
+													_1: {ctor: '[]'}
+												}),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$li,
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$class(
 															A2(
 																_elm_lang$core$Basics_ops['++'],
-																A2(_myrho$elm_round$Round$round, 2, (_p32._1.curr / _p32._1.max) * 100),
-																'%')),
+																'tab-item ',
+																function () {
+																	var _p41 = model.actionTab;
+																	if (_p41.ctor === 'Research') {
+																		return 'active';
+																	} else {
+																		return '';
+																	}
+																}())),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Events$onClick(
+																_user$project$Main$SetActionTab(_user$project$Main$Research)),
+															_1: {ctor: '[]'}
+														}
+													},
+													{
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$a,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Events$onClick(
+																	_user$project$Main$SetActionTab(_user$project$Main$Research)),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Attributes$href('javascript:void(0)'),
+																	_1: {ctor: '[]'}
+																}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text('Research '),
+																_1: {
+																	ctor: '::',
+																	_0: function () {
+																		var _p42 = model.survivor.action;
+																		if ((_p42.ctor === 'Researching') && (_p42._1.ctor === '_Tuple2')) {
+																			return A2(
+																				_elm_lang$html$Html$span,
+																				{
+																					ctor: '::',
+																					_0: _elm_lang$html$Html_Attributes$class('label label-primary'),
+																					_1: {ctor: '[]'}
+																				},
+																				{
+																					ctor: '::',
+																					_0: _elm_lang$html$Html$text(
+																						A2(
+																							_elm_lang$core$Basics_ops['++'],
+																							A2(_myrho$elm_round$Round$round, 2, (_p42._1._0 / _p42._1._1) * 100),
+																							'%')),
+																					_1: {ctor: '[]'}
+																				});
+																		} else {
+																			return _elm_lang$html$Html$text('');
+																		}
+																	}(),
+																	_1: {ctor: '[]'}
+																}
+															}),
 														_1: {ctor: '[]'}
-													});
+													}),
+												_1: {ctor: '[]'}
+											}
+										}),
+									_1: {
+										ctor: '::',
+										_0: function () {
+											var _p43 = model.actionTab;
+											if (_p43.ctor === 'Fabrication') {
+												return _user$project$Main$viewFabricationTab(model);
 											} else {
-												return _elm_lang$html$Html$text('');
+												return _user$project$Main$viewResearchTab(model);
 											}
 										}(),
 										_1: {ctor: '[]'}
 									}
-								}),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$li,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class(
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										'tab-item ',
-										function () {
-											var _p33 = model.actionTab;
-											if (_p33.ctor === 'Research') {
-												return 'active';
-											} else {
-												return '';
-											}
-										}())),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Events$onClick(
-										_user$project$Main$SetActionTab(_user$project$Main$Research)),
-									_1: {ctor: '[]'}
 								}
-							},
-							{
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$a,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											_user$project$Main$SetActionTab(_user$project$Main$Research)),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$href('javascript:void(0)'),
-											_1: {ctor: '[]'}
-										}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('Research '),
-										_1: {
-											ctor: '::',
-											_0: function () {
-												var _p34 = model.survivor.action;
-												if ((_p34.ctor === 'Researching') && (_p34._1.ctor === '_Tuple2')) {
-													return A2(
-														_elm_lang$html$Html$span,
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$class('label label-primary'),
-															_1: {ctor: '[]'}
-														},
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html$text(
-																A2(
-																	_elm_lang$core$Basics_ops['++'],
-																	A2(_myrho$elm_round$Round$round, 2, (_p34._1._0 / _p34._1._1) * 100),
-																	'%')),
-															_1: {ctor: '[]'}
-														});
-												} else {
-													return _elm_lang$html$Html$text('');
-												}
-											}(),
-											_1: {ctor: '[]'}
-										}
-									}),
-								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
-					}
-				}),
-			_1: {
-				ctor: '::',
-				_0: function () {
-					var _p35 = model.actionTab;
-					if (_p35.ctor === 'Fabrication') {
-						return _user$project$Main$viewFabricationTab(model);
-					} else {
-						return _user$project$Main$viewResearchTab(model);
-					}
-				}(),
+					}),
 				_1: {ctor: '[]'}
 			}
 		});
@@ -13104,76 +13933,143 @@ var _user$project$Main$view = function (model) {
 					ctor: '::',
 					_0: A2(
 						_elm_lang$html$Html$div,
+						{ctor: '[]'},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('columns'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
+							_0: _user$project$Main$viewPauseButton(model),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(' '),
+								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('column col-4 col-xs-12'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _user$project$Main$viewStats(model),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$p,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('text-center'),
-												_1: {ctor: '[]'}
-											},
-											{
-												ctor: '::',
-												_0: _user$project$Main$viewPauseButton(model),
-												_1: {ctor: '[]'}
-											}),
-										_1: {
+									_0: model.showHelp ? A2(
+										_elm_lang$html$Html$button,
+										{
 											ctor: '::',
-											_0: _user$project$Inventory$isEmpty(model.inventory) ? _elm_lang$html$Html$text('') : _user$project$Main$viewInventory(model),
+											_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$DismissHelp),
 											_1: {
 												ctor: '::',
-												_0: _Gizra$elm_all_set$EverySet$isEmpty(model.abilities) ? _elm_lang$html$Html$text('') : _user$project$Main$viewAbilities(model),
+												_0: _elm_lang$html$Html_Attributes$class('btn'),
 												_1: {ctor: '[]'}
 											}
-										}
-									}
-								}),
-							_1: {
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('Dismiss Help'),
+											_1: {ctor: '[]'}
+										}) : _elm_lang$html$Html$text(''),
+									_1: {ctor: '[]'}
+								}
+							}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('columns'),
+								_1: {ctor: '[]'}
+							},
+							{
 								ctor: '::',
 								_0: A2(
 									_elm_lang$html$Html$div,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('column col-8 col-xs-12'),
+										_0: _elm_lang$html$Html_Attributes$class('column col-4 col-xs-12'),
 										_1: {ctor: '[]'}
 									},
 									{
 										ctor: '::',
-										_0: _user$project$Main$viewPowerUplink(model),
+										_0: _user$project$Main$viewStats(model),
 										_1: {
 											ctor: '::',
-											_0: _user$project$Main$viewActions(model),
-											_1: {ctor: '[]'}
+											_0: _user$project$StatusEffects$isEmpty(model.statusEffects) ? _elm_lang$html$Html$text('') : _user$project$StatusEffects$viewSidebar(model.statusEffects),
+											_1: {
+												ctor: '::',
+												_0: _user$project$Inventory$isEmpty(model.inventory) ? _elm_lang$html$Html$text('') : _user$project$Main$viewInventory(model),
+												_1: {
+													ctor: '::',
+													_0: _user$project$Abilities$isEmpty(model.abilities) ? _elm_lang$html$Html$text('') : _user$project$Main$viewAbilities(model),
+													_1: {ctor: '[]'}
+												}
+											}
 										}
 									}),
-								_1: {ctor: '[]'}
-							}
-						}),
-					_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$div,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('column col-8 col-xs-12'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$div,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Attributes$class('columns'),
+													_1: {ctor: '[]'}
+												},
+												{
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$div,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$class('column col-12'),
+															_1: {ctor: '[]'}
+														},
+														{
+															ctor: '::',
+															_0: _user$project$Main$viewPowerUplink(model),
+															_1: {ctor: '[]'}
+														}),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$div,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$class('column col-12'),
+																_1: {ctor: '[]'}
+															},
+															{
+																ctor: '::',
+																_0: _user$project$Main$viewActions(model),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}
+												}),
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {
+							ctor: '::',
+							_0: model.isDev ? _user$project$Main$viewDevBar(model) : _elm_lang$html$Html$text(''),
+							_1: {ctor: '[]'}
+						}
+					}
 				}
 			}
 		});
 };
-var _user$project$Main$main = _elm_lang$html$Html$program(
-	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})();
+var _user$project$Main$main = _elm_lang$html$Html$programWithFlags(
+	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})(
+	A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (isDev) {
+			return _elm_lang$core$Json_Decode$succeed(
+				{isDev: isDev});
+		},
+		A2(_elm_lang$core$Json_Decode$field, 'isDev', _elm_lang$core$Json_Decode$bool)));
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
