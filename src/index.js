@@ -1,9 +1,9 @@
 'use strict'
 
-require('font-awesome/css/font-awesome.css')
+// require('font-awesome/css/font-awesome.css')
 
 require('spectre.css')
-// require("spectre.css/dist/spectre-icons.css")
+require('spectre.css/dist/spectre-icons.css')
 require('spectre.css/dist/spectre-exp.css')
 
 require('./css/general.scss')

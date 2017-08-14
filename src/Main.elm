@@ -914,7 +914,7 @@ viewPowerUplink model =
                     [ if model.charging then
                         Html.span
                             []
-                            [ Html.i [ Hattrs.class "fa fa-spinner fa-spin" ] []
+                            [ Html.i [ Hattrs.class "icon icon-refresh spin" ] []
                             , Html.text " Charging"
                             ]
                       else
