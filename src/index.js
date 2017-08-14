@@ -8,9 +8,6 @@ require('spectre.css/dist/spectre-exp.css')
 
 require('./css/general.scss')
 
-// Require index.html so it gets copied to dist
-require('./index.html')
-
 const Elm = require('./Main.elm')
 const mountNode = document.getElementById('main')
 

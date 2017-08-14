@@ -1,8 +1,11 @@
 const path = require('path')
 const webpack = require('webpack')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 const merge = require('webpack-merge')
 const PrettierPlugin = require('prettier-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
+const WebpackBuildNotifierPlugin = require('webpack-build-notifier')
+const WebpackBrowserPlugin = require('webpack-browser-plugin')
 
 const TARGET_ENV =
   process.env.npm_lifecycle_event === 'build' ? 'production' : 'development'
@@ -21,11 +24,7 @@ const common = {
     rules: [
       {
         test: /\.(css|scss)$/,
-        use: [
-          'style-loader',
-          'css-loader',
-          'sass-loader'
-        ]
+        use: ['style-loader', 'css-loader', 'sass-loader']
       },
       {
         test: /\.js$/,
@@ -39,18 +38,15 @@ const common = {
           }
         }
       },
-      {
-        test: /\.html$/,
-        exclude: /node_modules/,
-        loader: 'file-loader?name=[name].[ext]'
-      },
+      // {
+      //   test: /\.html$/,
+      //   exclude: /node_modules/,
+      //   loader: 'file-loader?name=[name].[ext]'
+      // },
       {
         test: /\.elm$/,
         exclude: [/elm-stuff/, /node_modules/],
-        use: [
-          'elm-hot-loader',
-          'elm-webpack-loader?verbose=true&warn=true'
-        ]
+        use: ['elm-hot-loader', 'elm-webpack-loader?verbose=true&warn=true']
       },
       {
         test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
@@ -63,7 +59,16 @@ const common = {
     ],
 
     noParse: /\.elm$/
-  }
+  },
+
+  plugins: [
+    new CleanWebpackPlugin(['dist']),
+
+    new HtmlWebpackPlugin({
+      title: 'danneu/crash-landing',
+      template: 'src/index.html'
+    })
+  ]
 }
 
 //
@@ -74,8 +79,6 @@ if (TARGET_ENV === 'development') {
   console.log('=== Building for development')
   module.exports = merge(common, {
     plugins: [
-      new CleanWebpackPlugin(['dist']),
-
       // Hot Module Reload plugin recommends this in the js console
       new webpack.NamedModulesPlugin(),
 
@@ -83,7 +86,15 @@ if (TARGET_ENV === 'development') {
         extensions: ['.js'],
         semi: false,
         singleQuote: true
-      })
+      }),
+
+      // Notify on buld errors
+      new WebpackBuildNotifierPlugin({
+        suppressSuccess: true
+      }),
+
+      // Auto-open browser to app on boot
+      new WebpackBrowserPlugin()
     ],
 
     devServer: {
