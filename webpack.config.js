@@ -1,15 +1,20 @@
-var path = require("path");
+const path = require('path')
+const webpack = require('webpack')
+const merge = require('webpack-merge')
+const PrettierPlugin = require('prettier-webpack-plugin')
+const CleanWebpackPlugin = require('clean-webpack-plugin')
 
-module.exports = {
+const TARGET_ENV =
+  process.env.npm_lifecycle_event === 'build' ? 'production' : 'development'
+
+const common = {
   entry: {
-    app: [
-      './src/index.js'
-    ]
+    app: ['./src/index.js']
   },
 
   output: {
-    path: path.resolve(__dirname + '/dist'),
-    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js'
   },
 
   module: {
@@ -23,36 +28,86 @@ module.exports = {
         ]
       },
       {
-        test:    /\.html$/,
+        test: /\.js$/,
         exclude: /node_modules/,
-        loader:  'file-loader?name=[name].[ext]',
+        include: [path.resolve(__dirname, 'src')],
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['env'],
+            cacheDirectory: true
+          }
+        }
       },
       {
-        test:    /\.elm$/,
+        test: /\.html$/,
+        exclude: /node_modules/,
+        loader: 'file-loader?name=[name].[ext]'
+      },
+      {
+        test: /\.elm$/,
         exclude: [/elm-stuff/, /node_modules/],
-        loader:  'elm-webpack-loader?verbose=true&warn=true',
+        use: [
+          'elm-hot-loader',
+          'elm-webpack-loader?verbose=true&warn=true'
+        ]
       },
       {
         test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        loader: 'url-loader?limit=10000&mimetype=application/font-woff',
+        loader: 'url-loader?limit=10000&mimetype=application/font-woff'
       },
       {
         test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        loader: 'file-loader',
-      },
+        loader: 'file-loader'
+      }
     ],
 
-    noParse: /\.elm$/,
-  },
+    noParse: /\.elm$/
+  }
+}
 
-  devServer: {
-    inline: true,
-    historyApiFallback: true,
-    // historyApiFallback: {
-    //   index: 'index.html'
-    // },
-    stats: { colors: true },
-  },
+//
+// DEVELOPMENT
+//
 
+if (TARGET_ENV === 'development') {
+  console.log('=== Building for development')
+  module.exports = merge(common, {
+    plugins: [
+      new CleanWebpackPlugin(['dist']),
 
-};
+      // Hot Module Reload plugin recommends this in the js console
+      new webpack.NamedModulesPlugin(),
+
+      new PrettierPlugin({
+        extensions: ['.js'],
+        semi: false,
+        singleQuote: true
+      })
+    ],
+
+    devServer: {
+      inline: true,
+      historyApiFallback: true,
+      stats: { colors: true }
+    }
+  })
+}
+
+//
+// PRODUCTION
+//
+
+if (TARGET_ENV === 'production') {
+  console.log('=== Building for production')
+  module.exports = merge(common, {
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: '[name]-[hash].js'
+    },
+    plugins: [
+      // Apparently necessary when using [hash]
+      new webpack.optimize.OccurrenceOrderPlugin()
+    ]
+  })
+}
