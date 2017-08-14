@@ -5,7 +5,7 @@ const merge = require('webpack-merge')
 const PrettierPlugin = require('prettier-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const WebpackBuildNotifierPlugin = require('webpack-build-notifier')
-const WebpackBrowserPlugin = require('webpack-browser-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 const TARGET_ENV =
   process.env.npm_lifecycle_event === 'build' ? 'production' : 'development'
@@ -24,7 +24,10 @@ const common = {
     rules: [
       {
         test: /\.(css|scss)$/,
-        use: ['style-loader', 'css-loader', 'sass-loader']
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: ['css-loader', 'sass-loader', 'postcss-loader']
+        })
       },
       {
         test: /\.js$/,
@@ -90,11 +93,10 @@ if (TARGET_ENV === 'development') {
 
       // Notify on buld errors
       new WebpackBuildNotifierPlugin({
-        suppressSuccess: true
+        suppressSuccess: 'always'
       }),
 
-      // Auto-open browser to app on boot
-      new WebpackBrowserPlugin()
+      new ExtractTextPlugin('app.css')
     ],
 
     devServer: {
@@ -118,7 +120,9 @@ if (TARGET_ENV === 'production') {
     },
     plugins: [
       // Apparently necessary when using [hash]
-      new webpack.optimize.OccurrenceOrderPlugin()
+      new webpack.optimize.OccurrenceOrderPlugin(),
+
+      new ExtractTextPlugin('app-[hash].css')
     ]
   })
 }
