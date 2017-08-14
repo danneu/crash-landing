@@ -12092,13 +12092,10 @@ var _user$project$Main$tickOxygen = F2(
 			{oxygen: nextOxygen, survivor: nextSurvivor, paused: nextSurvivor.dead});
 	});
 var _user$project$Main$foodConsumedPerSecond = function (model) {
-	return A2(
-		_elm_lang$core$Debug$log,
-		'food consumed per second',
-		function (consumed) {
-			return A2(_user$project$StatusEffects$member, _user$project$StatusEffects$Amphetamine, model.statusEffects) ? (consumed * 0.5) : consumed;
-		}(
-			model.survivor.suspended ? 0.2 : 2.0));
+	return function (consumed) {
+		return A2(_user$project$StatusEffects$member, _user$project$StatusEffects$Amphetamine, model.statusEffects) ? (consumed * 0.5) : consumed;
+	}(
+		model.survivor.suspended ? 0.2 : 2.0);
 };
 var _user$project$Main$foodProducedPerSecond = function (model) {
 	var _p23 = model.powerTarget;
