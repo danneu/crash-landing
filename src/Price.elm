@@ -1,6 +1,7 @@
 module Price exposing (..)
 
 -- TODO: Use real growth funcs
+--- TODO: Use item.matterCostOf instead
 
 
 priceOfSolarPanel : Int -> Float

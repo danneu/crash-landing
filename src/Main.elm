@@ -1,9 +1,9 @@
 module Main exposing (..)
 
+import Abilities exposing (Abilities)
 import Ability exposing (Ability)
 import Action exposing (Action)
 import AnimationFrame
-import EverySet exposing (EverySet)
 import Html as Html exposing (Html, div, program, text)
 import Html.Attributes as Hattrs
 import Html.Events as Hevents
@@ -14,6 +14,8 @@ import Price
 import Quantity exposing (Quantity)
 import Round
 import Spectre
+import StatusEffects exposing (StatusEffect(..), StatusEffects)
+import Survivor exposing (Survivor)
 import Time exposing (Time)
 
 
@@ -23,13 +25,6 @@ import Time exposing (Time)
 type ActionTab
     = Fabrication
     | Research
-
-
-type alias Survivor =
-    { suspended : Bool
-    , dead : Bool
-    , action : Action
-    }
 
 
 type PowerTarget
@@ -42,11 +37,16 @@ type alias Model =
     , power : Quantity
     , powerTarget : PowerTarget
     , oxygen : Quantity
+    , food : Quantity
     , matter : Quantity
     , charging : Bool
     , paused : Bool
     , inventory : Inventory
-    , abilities : EverySet Ability
+    , statusEffects : StatusEffects
+    , abilities : Abilities
+
+    -- Extra
+    , isDev : Bool
 
     -- UI
     , actionTab : ActionTab
@@ -56,15 +56,20 @@ type alias Model =
 
 initPodState : Model
 initPodState =
-    { survivor = { suspended = True, action = Action.Idling, dead = False }
+    { survivor = Survivor.init
     , power = Quantity 30 100
     , powerTarget = LifeSupport
     , oxygen = Quantity 50 100
+    , food = Quantity 30 50
     , matter = Quantity 20 100
     , charging = False
     , paused = False
     , inventory = Inventory.empty
-    , abilities = EverySet.empty
+    , statusEffects = StatusEffects.empty
+    , abilities = Abilities.empty
+
+    -- Extra
+    , isDev = False
 
     -- UI
     , actionTab = Fabrication
@@ -72,15 +77,26 @@ initPodState =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( initPodState
+type alias Flags =
+    { isDev : Bool }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init { isDev } =
+    ( { initPodState | isDev = isDev }
     , Cmd.none
     )
 
 
 
 -- MESSAGES
+
+
+type DevCheat
+    = AddStatusEffect StatusEffect
+    | AddInventory Item
+    | AddAbility Ability
+    | IncResources
 
 
 type Msg
@@ -94,40 +110,83 @@ type Msg
     | SetActionTab ActionTab
     | BeginFabricating Item
     | DismissHelp
+    | DevCheat DevCheat
 
 
 
 -- TODO: Finish migrating to `{resource}GrowthPerSecond` and `net{Resource}PerSecond` functions
 
 
-oxygenPerSecond : Model -> Float
-oxygenPerSecond model =
+foodProducedPerSecond : Model -> Float
+foodProducedPerSecond model =
+    case model.powerTarget of
+        LifeSupport ->
+            -- Life support needs power to work
+            if model.power.curr == 0 then
+                0
+            else
+                0.8
+
+        _ ->
+            0
+
+
+foodConsumedPerSecond : Model -> Float
+foodConsumedPerSecond model =
+    (if model.survivor.suspended then
+        0.2
+     else
+        2.0
+    )
+        |> (\consumed ->
+                if StatusEffects.member StatusEffects.Amphetamine model.statusEffects then
+                    consumed * 0.5
+                else
+                    consumed
+           )
+
+
+foodNetPerSecond : Model -> Float
+foodNetPerSecond model =
+    foodProducedPerSecond model - foodConsumedPerSecond model
+
+
+oxygenProducedPerSecond : Model -> Float
+oxygenProducedPerSecond model =
+    case model.powerTarget of
+        LifeSupport ->
+            -- Life support needs power to work
+            if model.power.curr == 0 then
+                0
+            else
+                1
+
+        _ ->
+            0
+
+
+oxygenConsumedPerSecond : Model -> Float
+oxygenConsumedPerSecond model =
     let
-        consumed1 =
+        consumedBySurvivor =
             if model.survivor.suspended then
-                0.1
+                0.5
             else
-                1.5
-
-        consumed2 =
-            if not model.survivor.suspended && EverySet.member Ability.ShallowBreathing model.abilities then
-                consumed1 - 0.75
-            else
-                consumed1
-
-        produced =
-            case model.powerTarget of
-                LifeSupport ->
-                    -- Life support needs power to work
-                    if model.power.curr == 0 then
-                        0
-                    else
-                        1
-
-                _ ->
-                    0
+                let
+                    consciousBase =
+                        3.0
+                in
+                if Abilities.member Ability.ShallowBreathing model.abilities then
+                    consciousBase - 0.75
+                else
+                    consciousBase
     in
-    produced - consumed2
+    consumedBySurvivor
+
+
+oxygenNetPerSecond : Model -> Float
+oxygenNetPerSecond model =
+    oxygenProducedPerSecond model - oxygenConsumedPerSecond model
 
 
 {-| Fabricator matter consumption per second
@@ -141,7 +200,7 @@ getFabricatorEfficiency model =
         [ -- base
           0.5
         , -- engineering bonus
-          if EverySet.member Ability.Engineering model.abilities then
+          if Abilities.member Ability.Engineering model.abilities then
             0.25
           else
             0
@@ -197,7 +256,7 @@ powerGrowthPerSecond model =
             let
                 chargedFromUplink =
                     if model.charging then
-                        4
+                        3
                     else
                         0
 
@@ -247,6 +306,24 @@ tickPower dt model =
     { model | power = nextPower }
 
 
+tickFood : Float -> Model -> Model
+tickFood dt model =
+    let
+        food =
+            model.food
+
+        nextFood =
+            { food
+                | curr =
+                    food.curr
+                        |> (+) (dt * foodNetPerSecond model)
+                        |> Basics.min food.max
+                        |> Basics.max 0
+            }
+    in
+    { model | food = nextFood }
+
+
 tickOxygen : Float -> Model -> Model
 tickOxygen dt model =
     let
@@ -260,7 +337,7 @@ tickOxygen dt model =
             { oxygen
                 | curr =
                     oxygen.curr
-                        |> (+) (dt * oxygenPerSecond model)
+                        |> (+) (dt * oxygenNetPerSecond model)
                         |> Basics.min oxygen.max
                         |> Basics.max 0
             }
@@ -335,6 +412,13 @@ tickFabrication dt model =
                             { survivor
                                 | action = Action.Idling
                             }
+                        , statusEffects =
+                            case item of
+                                Item.Amphetamine ->
+                                    StatusEffects.insert StatusEffects.Amphetamine model.statusEffects
+
+                                _ ->
+                                    model.statusEffects
                         , inventory =
                             case item of
                                 Item.SolarPanel ->
@@ -342,6 +426,9 @@ tickFabrication dt model =
 
                                 Item.MatterBin ->
                                     { inventory | matterBins = inventory.matterBins + 1 }
+
+                                _ ->
+                                    inventory
                         , matter =
                             case item of
                                 Item.MatterBin ->
@@ -383,11 +470,21 @@ tickAction dt model =
                 tickFabrication dt model
 
             Action.Researching ability ( curr, max ) ->
-                if curr + dt >= max then
+                let
+                    deltaResearch =
+                        dt
+                            |> (\dr ->
+                                    if StatusEffects.member Amphetamine model.statusEffects then
+                                        dr + dr * 0.25
+                                    else
+                                        dr
+                               )
+                in
+                if curr + deltaResearch >= max then
                     -- Research complete
                     { model
                         | abilities =
-                            EverySet.insert ability model.abilities
+                            Abilities.insert ability model.abilities
                         , survivor =
                             { survivor
                                 | action = Action.Idling
@@ -398,7 +495,7 @@ tickAction dt model =
                     { model
                         | survivor =
                             { survivor
-                                | action = Action.Researching ability ( curr + dt, max )
+                                | action = Action.Researching ability ( curr + deltaResearch, max )
                             }
                     }
 
@@ -408,8 +505,10 @@ tickPod dt model =
     model
         |> tickPower dt
         |> tickOxygen dt
+        |> tickFood dt
         |> tickMatterGrowth dt
         |> tickAction dt
+        |> (\m -> { m | statusEffects = StatusEffects.tick dt m.statusEffects })
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -475,10 +574,13 @@ update msg model =
                 price =
                     case item of
                         Item.SolarPanel ->
-                            Price.priceOfSolarPanel model.inventory.solarPanels
+                            Item.matterCostOf item model.inventory.solarPanels
 
                         Item.MatterBin ->
-                            Price.priceOfMatterBin model.inventory.matterBins
+                            Item.matterCostOf item model.inventory.matterBins
+
+                        Item.Amphetamine ->
+                            Item.matterCostOf item 0
             in
             ( { model
                 | survivor =
@@ -488,6 +590,67 @@ update msg model =
               }
             , Cmd.none
             )
+
+        DevCheat cheat ->
+            -- Ignore if we are not in #dev mode
+            if not model.isDev then
+                update NoOp model
+            else
+                let
+                    nextModel =
+                        case cheat of
+                            AddStatusEffect effect ->
+                                { model
+                                    | statusEffects =
+                                        StatusEffects.insert effect model.statusEffects
+                                }
+
+                            AddAbility ability ->
+                                { model
+                                    | abilities =
+                                        Abilities.insert ability model.abilities
+                                }
+
+                            AddInventory item ->
+                                let
+                                    inventory =
+                                        model.inventory
+                                in
+                                { model
+                                    | inventory =
+                                        case item of
+                                            Item.SolarPanel ->
+                                                { inventory | solarPanels = inventory.solarPanels + 1 }
+
+                                            Item.MatterBin ->
+                                                { inventory | matterBins = inventory.matterBins + 1 }
+
+                                            _ ->
+                                                inventory
+                                }
+
+                            IncResources ->
+                                let
+                                    maxPower =
+                                        model.power.max
+
+                                    maxMatter =
+                                        model.matter.max
+
+                                    maxOxygen =
+                                        model.oxygen.max
+
+                                    maxFood =
+                                        model.food.max
+                                in
+                                { model
+                                    | power = Quantity maxPower maxPower
+                                    , matter = Quantity maxMatter maxMatter
+                                    , oxygen = Quantity maxOxygen maxOxygen
+                                    , food = Quantity maxFood maxFood
+                                }
+                in
+                ( nextModel, Cmd.none )
 
 
 
@@ -509,9 +672,9 @@ subscriptions model =
 -- MAIN
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
         , update = update
@@ -664,7 +827,7 @@ viewStats model =
                     [ -- OXYGEN
                       let
                         rate =
-                            oxygenPerSecond model
+                            oxygenNetPerSecond model
                       in
                       Html.span
                         []
@@ -689,6 +852,35 @@ viewStats model =
                         , low = 25
                         , high = 50
                         , optimum = model.oxygen.max
+                        }
+                    , -- FOOD
+                      let
+                        rate =
+                            foodNetPerSecond model
+                      in
+                      Html.span
+                        []
+                        [ Html.text "Food: "
+                        , Html.text (Round.round 1 model.food.curr)
+                        , Html.text "/"
+                        , Html.text (Round.round 1 model.food.max)
+                        , Html.text " "
+                        , if rate >= 0 then
+                            Html.span
+                                [ Hattrs.class "text-green" ]
+                                [ Html.text <| "+" ++ Round.round 1 rate ++ "/sec" ]
+                          else
+                            Html.span
+                                [ Hattrs.class "text-red" ]
+                                [ Html.text <| Round.round 1 rate ++ "/sec" ]
+                        ]
+                    , Spectre.meter
+                        { value = model.food.curr
+                        , min = 0
+                        , max = model.food.max
+                        , low = model.food.max * 0.25
+                        , high = model.food.max * 0.5
+                        , optimum = model.food.max
                         }
                     ]
                 ]
@@ -756,6 +948,13 @@ viewInventory { inventory } =
                             []
                             [ Html.text <| "Solar Panels: " ++ toString inventory.solarPanels
                             ]
+                    , if inventory.matterBins == 0 then
+                        Html.text ""
+                      else
+                        Html.li
+                            []
+                            [ Html.text <| "Matter Bins: " ++ toString inventory.matterBins
+                            ]
                     ]
                 ]
             ]
@@ -779,7 +978,7 @@ viewAbilities { abilities } =
                 [ Html.ul
                     [ Hattrs.class "list-unstyled" ]
                     (abilities
-                        |> EverySet.toList
+                        |> Abilities.toList
                         |> List.map (\a -> Html.li [] [ Html.text <| toString a ])
                     )
                 ]
@@ -790,84 +989,134 @@ viewAbilities { abilities } =
 viewActions : Model -> Html Msg
 viewActions model =
     Html.div
-        []
-        [ Html.ul
-            [ Hattrs.class "tab tab-block" ]
-            [ Html.li
-                [ Hattrs.class <|
-                    "tab-item "
-                        ++ (case model.actionTab of
-                                Fabrication ->
-                                    "active"
-
-                                _ ->
-                                    ""
-                           )
-                ]
-                [ Html.a
-                    [ Hevents.onClick (SetActionTab Fabrication)
-                    , Hattrs.href "javascript:void(0)"
+        [ Hattrs.class "panel" ]
+        [ Html.div
+            [ Hattrs.class "panel-header" ]
+            [ -- CURRENT ACTION
+              Html.div
+                [ Hattrs.class "panel-title" ]
+                [ Html.span [] [ Html.text "Current Task: " ]
+                , Html.span
+                    [ Hattrs.class <|
+                        "label "
+                            ++ (if Survivor.isIdling model.survivor then
+                                    "label-default"
+                                else
+                                    "label-success"
+                               )
                     ]
-                    [ Html.text "Fabrication "
-                    , case model.survivor.action of
-                        Action.Fabricating _ { curr, max } ->
-                            Html.span
-                                [ Hattrs.class "label label-primary" ]
-                                [ Html.text <| Round.round 2 (curr / max * 100) ++ "%" ]
+                    [ case model.survivor.action of
+                        Action.Idling ->
+                            Html.text "No task"
 
-                        _ ->
-                            Html.text ""
-                    ]
-                ]
-            , Html.li
-                [ Hattrs.class <|
-                    "tab-item "
-                        ++ (case model.actionTab of
-                                Research ->
-                                    "active"
+                        Action.Fabricating _ _ ->
+                            Html.text "Fabricating"
 
-                                _ ->
-                                    ""
-                           )
-                , Hevents.onClick (SetActionTab Research)
-                ]
-                [ Html.a
-                    [ Hevents.onClick (SetActionTab Research)
-                    , Hattrs.href "javascript:void(0)"
-                    ]
-                    [ Html.text "Research "
-                    , case model.survivor.action of
-                        Action.Researching _ ( curr, max ) ->
-                            Html.span
-                                [ Hattrs.class "label label-primary" ]
-                                [ Html.text <| Round.round 2 (curr / max * 100) ++ "%" ]
-
-                        _ ->
-                            Html.text ""
+                        Action.Researching _ _ ->
+                            Html.text "Researching"
+                    , Html.text " "
+                    , if Survivor.isIdling model.survivor then
+                        Html.text ""
+                      else
+                        Html.button
+                            [ Hattrs.class "btn btn-sm"
+                            , Hevents.onClick (SetSurvivorAction Action.Idling)
+                            ]
+                            [ Html.text "Cancel" ]
                     ]
                 ]
             ]
-        , case model.actionTab of
-            Fabrication ->
-                viewFabricationTab model
+        , Html.div
+            [ Hattrs.class "panel-body" ]
+            [ Html.div
+                []
+                [ Html.div
+                    [ Hattrs.class "divider" ]
+                    []
+                , Html.ul
+                    [ Hattrs.class "tab tab-block" ]
+                    [ Html.li
+                        [ Hattrs.class <|
+                            "tab-item "
+                                ++ (case model.actionTab of
+                                        Fabrication ->
+                                            "active"
 
-            Research ->
-                viewResearchTab model
+                                        _ ->
+                                            ""
+                                   )
+                        ]
+                        [ Html.a
+                            [ Hevents.onClick (SetActionTab Fabrication)
+                            , Hattrs.href "javascript:void(0)"
+                            ]
+                            [ Html.text "Fabrication "
+                            , case model.survivor.action of
+                                Action.Fabricating _ { curr, max } ->
+                                    Html.span
+                                        [ Hattrs.class "label label-primary" ]
+                                        [ Html.text <| Round.round 2 (curr / max * 100) ++ "%" ]
+
+                                _ ->
+                                    Html.text ""
+                            ]
+                        ]
+                    , Html.li
+                        [ Hattrs.class <|
+                            "tab-item "
+                                ++ (case model.actionTab of
+                                        Research ->
+                                            "active"
+
+                                        _ ->
+                                            ""
+                                   )
+                        , Hevents.onClick (SetActionTab Research)
+                        ]
+                        [ Html.a
+                            [ Hevents.onClick (SetActionTab Research)
+                            , Hattrs.href "javascript:void(0)"
+                            ]
+                            [ Html.text "Research "
+                            , case model.survivor.action of
+                                Action.Researching _ ( curr, max ) ->
+                                    Html.span
+                                        [ Hattrs.class "label label-primary" ]
+                                        [ Html.text <| Round.round 2 (curr / max * 100) ++ "%" ]
+
+                                _ ->
+                                    Html.text ""
+                            ]
+                        ]
+                    ]
+                , case model.actionTab of
+                    Fabrication ->
+                        viewFabricationTab model
+
+                    Research ->
+                        viewResearchTab model
+                ]
+            ]
         ]
 
 
 viewFabricationTab : Model -> Html Msg
 viewFabricationTab model =
+    let
+        efficiency =
+            getFabricatorEfficiency model
+
+        percentString =
+            (Round.round 2 <| efficiency * 100) ++ "%"
+
+        viewPrice price =
+            Html.strong
+                []
+                [ Html.text <| " (" ++ toString price ++ " matter)" ]
+    in
     Html.div
         []
-        [ let
-            efficiency =
-                getFabricatorEfficiency model
-
-            percentString =
-                (Round.round 2 <| efficiency * 100) ++ "%"
-          in
-          Html.p
+        [ Html.p
             []
             [ Html.strong
                 []
@@ -876,7 +1125,12 @@ viewFabricationTab model =
             ]
         , Html.p
             []
-            [ Html.text "The survivor can build itemswhile they are conscious and there is matter in the matter collector." ]
+            [ Html.text "The survivor can build items while they are conscious and there is matter in the matter collector." ]
+        , Html.div
+            [ Hattrs.class "divider text-center"
+            , Hattrs.attribute "data-content" "Permanent"
+            ]
+            []
         , Html.ul
             []
             [ let
@@ -887,6 +1141,9 @@ viewFabricationTab model =
 
                         _ ->
                             False
+
+                price =
+                    Price.priceOfSolarPanel model.inventory.solarPanels
               in
               Html.li
                 [ Hevents.onClick <|
@@ -894,6 +1151,7 @@ viewFabricationTab model =
                         NoOp
                     else
                         BeginFabricating Item.SolarPanel
+                , Hevents.onDoubleClick (DevCheat (AddInventory Item.SolarPanel))
                 ]
                 [ Html.button
                     [ Hattrs.classList
@@ -904,6 +1162,7 @@ viewFabricationTab model =
                     ]
                     [ Html.text "Solar Panel"
                     ]
+                , viewPrice price
                 , Html.text " Solar panels allow the pod to charge passively"
                 ]
             , let
@@ -914,6 +1173,9 @@ viewFabricationTab model =
 
                         _ ->
                             False
+
+                price =
+                    Price.priceOfSolarPanel model.inventory.matterBins
               in
               Html.li
                 [ Hevents.onClick <|
@@ -921,6 +1183,7 @@ viewFabricationTab model =
                         NoOp
                     else
                         BeginFabricating Item.MatterBin
+                , Hevents.onDoubleClick (DevCheat (AddInventory Item.MatterBin))
                 ]
                 [ Html.button
                     [ Hattrs.classList
@@ -931,7 +1194,52 @@ viewFabricationTab model =
                     ]
                     [ Html.text "Matter Bin"
                     ]
+                , viewPrice price
                 , Html.text " +100 max matter storage"
+                ]
+            ]
+
+        --
+        -- TEMPORARY
+        --
+        , Html.div
+            [ Hattrs.class "divider text-center"
+            , Hattrs.attribute "data-content" "Temporary Buffs"
+            ]
+            []
+        , Html.ul
+            []
+            [ let
+                isSelected =
+                    case model.survivor.action of
+                        Action.Fabricating Item.Amphetamine _ ->
+                            True
+
+                        _ ->
+                            False
+
+                price =
+                    12
+              in
+              Html.li
+                [ Hevents.onClick <|
+                    if isSelected then
+                        NoOp
+                    else
+                        BeginFabricating Item.Amphetamine
+                , Hevents.onDoubleClick (DevCheat (AddStatusEffect Amphetamine))
+                ]
+                [ Html.button
+                    [ Hattrs.classList
+                        [ ( "btn", True )
+                        , ( "btn-primary", isSelected )
+                        ]
+                    , Hattrs.disabled isSelected
+                    ]
+                    [ Html.text "Amphetamine"
+                    ]
+                , viewPrice price
+                , Html.text <| (++) " " (StatusEffects.descriptionOf StatusEffects.Amphetamine)
                 ]
             ]
         ]
@@ -939,12 +1247,15 @@ viewFabricationTab model =
 
 viewResearchTab : Model -> Html Msg
 viewResearchTab model =
+    let
+        viewPrice price =
+            Html.strong
+                []
+                [ Html.text <| " (" ++ toString price ++ " seconds) " ]
+    in
     Html.div
         []
-        [ Html.p
-            []
-            [ Html.text "The survivor can research upgrades while they are conscious." ]
-        , Html.ul
+        [ Html.ul
             []
             [ let
                 isSelected =
@@ -955,11 +1266,13 @@ viewResearchTab model =
                         _ ->
                             False
               in
-              if EverySet.member Ability.ShallowBreathing model.abilities then
+              if Abilities.member Ability.ShallowBreathing model.abilities then
                 Html.text ""
               else
                 Html.li
-                    [ Hevents.onClick (SetSurvivorAction (Action.Researching Ability.ShallowBreathing ( 0, 5 ))) ]
+                    [ Hevents.onClick (SetSurvivorAction (Action.Researching Ability.ShallowBreathing ( 0, 5 )))
+                    , Hevents.onDoubleClick (DevCheat (AddAbility Ability.ShallowBreathing))
+                    ]
                     [ Html.button
                         [ Hattrs.classList
                             [ ( "btn", True )
@@ -969,7 +1282,8 @@ viewResearchTab model =
                         ]
                         [ Html.text "Shallow Breathing"
                         ]
-                    , Html.text " Survivor consumes less oxygen while conscious"
+                    , viewPrice (Ability.priceOf Ability.ShallowBreathing)
+                    , Html.text <| Abilities.descriptionOf Ability.ShallowBreathing
                     ]
             , let
                 isSelected =
@@ -980,19 +1294,25 @@ viewResearchTab model =
                         _ ->
                             False
               in
-              Html.li
-                [ Hevents.onClick (SetSurvivorAction (Action.Researching Ability.Engineering ( 0, 100 ))) ]
-                [ Html.button
-                    [ Hattrs.classList
-                        [ ( "btn", True )
-                        , ( "btn-primary", isSelected )
+              if Abilities.member Ability.Engineering model.abilities then
+                Html.text ""
+              else
+                Html.li
+                    [ Hevents.onClick (SetSurvivorAction (Action.Researching Ability.Engineering ( 0, 100 )))
+                    , Hevents.onDoubleClick (DevCheat (AddAbility Ability.Engineering))
+                    ]
+                    [ Html.button
+                        [ Hattrs.classList
+                            [ ( "btn", True )
+                            , ( "btn-primary", isSelected )
+                            ]
+                        , Hattrs.disabled isSelected
                         ]
-                    , Hattrs.disabled isSelected
+                        [ Html.text "Engineering"
+                        ]
+                    , viewPrice (Ability.priceOf Ability.Engineering)
+                    , Html.text <| Abilities.descriptionOf Ability.Engineering
                     ]
-                    [ Html.text "Engineering"
-                    ]
-                , Html.text " Survivor becomes more efficient with fabricator"
-                ]
             ]
         ]
 
@@ -1045,11 +1365,6 @@ viewHelp =
                 Fabrication costs power and matter. Research only costs time.
              """ ]
             ]
-        , Html.button
-            [ Hevents.onClick DismissHelp
-            , Hattrs.class "btn"
-            ]
-            [ Html.text "Dismiss Help" ]
         ]
 
 
@@ -1080,28 +1395,65 @@ view model =
           else
             Html.text ""
         , Html.div
+            []
+            [ viewPauseButton model
+            , Html.text " "
+            , if model.showHelp then
+                Html.button
+                    [ Hevents.onClick DismissHelp
+                    , Hattrs.class "btn"
+                    ]
+                    [ Html.text "Dismiss Help" ]
+              else
+                Html.text ""
+            ]
+        , Html.div
             [ Hattrs.class "columns" ]
             [ Html.div
                 [ Hattrs.class "column col-4 col-xs-12" ]
                 [ viewStats model
-                , Html.p
-                    [ Hattrs.class "text-center" ]
-                    [ viewPauseButton model ]
+                , if StatusEffects.isEmpty model.statusEffects then
+                    Html.text ""
+                  else
+                    StatusEffects.viewSidebar model.statusEffects
                 , if Inventory.isEmpty model.inventory then
                     Html.text ""
                   else
                     viewInventory model
-                , if EverySet.isEmpty model.abilities then
+                , if Abilities.isEmpty model.abilities then
                     Html.text ""
                   else
                     viewAbilities model
                 ]
             , Html.div
                 [ Hattrs.class "column col-8 col-xs-12" ]
-                [ viewPowerUplink model
-                , viewActions model
+                [ Html.div
+                    [ Hattrs.class "columns" ]
+                    [ Html.div
+                        [ Hattrs.class "column col-12" ]
+                        [ viewPowerUplink model ]
+                    , Html.div
+                        [ Hattrs.class "column col-12" ]
+                        [ viewActions model ]
+                    ]
                 ]
             ]
+        , if model.isDev then
+            viewDevBar model
+          else
+            Html.text ""
+        ]
 
-        -- , Html.div [] [ Html.text <| toString model ]
+
+viewDevBar : Model -> Html Msg
+viewDevBar model =
+    Html.div
+        []
+        [ --Html.text <| toString model
+          Html.text "You are in dev mode. Double-click fabrications / upgrades to insta-buy them for free."
+        , Html.button
+            [ Hevents.onClick (DevCheat IncResources)
+            , Hattrs.class "btn"
+            ]
+            [ Html.text "Increase Resources" ]
         ]
